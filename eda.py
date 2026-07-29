@@ -52,6 +52,7 @@ def visualize_images(data_dict, image_dir="//datashare//HW1//labeled_image_data/
     for ax, (filename, labels) in zip(axes, data_dict.items()):
         img_path = os.path.join(image_dir, filename)
 
+        print(img_path)
         # In a real environment, read the actual image.
         # Here we create a dummy image if the file isn't found locally.
         if os.path.exists(img_path):
