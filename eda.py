@@ -45,7 +45,7 @@ def yolo_to_bbox(x_center, y_center, w, h, img_w, img_h):
     return x_min, y_min, x_max, y_max
 
 
-def visualize_images(data_dict, image_dir="//datashare//HW1//labeled_image_data//images//train"):
+def visualize_images(data_dict, image_dir="/datashare/HW1/labeled_image_data/images/train"):
     """Draw bounding boxes on images and plot them."""
     fig, axes = plt.subplots(1, len(data_dict), figsize=(20, 5))
 
