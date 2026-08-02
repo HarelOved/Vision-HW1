@@ -1,9 +1,11 @@
 # Paths to the image directories
-train: /datashare/HW1/labeled_image_data/images/train
-val: /datashare/HW1/labeled_image_data/images/val
+path: /datashare/HW1/labeled_image_data
+
+train: images/train
+val: images/val
 
 # Number of classes
 nc: 3
 
 # Class names (must match the order used in your dataset labels)
-names: ['0','1','2']
+names: ['Empty','Tweezers','Needle_driver']

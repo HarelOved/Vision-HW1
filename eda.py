@@ -3,37 +3,49 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
+import glob
+import random
 
-# 1. Define the sample data provided in the prompt
-# Dictionary mapping filenames to their YOLO labels (class, x_center, y_center, width, height)
-sample_data = {
-    "d461d90b-frame_0299.jpg": [
-        [2, 0.4141009852216749, 0.5238095705951785, 0.2703201970443349, 0.18938140615501772],
-        [1, 0.5637315270935959, 0.41707722248351997, 0.10775862068965517, 0.32621774988791313]
-    ],
-    "d3410f1b-output_0186.jpg": [
-        [2, 0.29710591133004927, 0.4121510673234811, 0.28386699507389157, 0.528735632183908],
-        [1, 0.5458743842364532, 0.4422550629447181, 0.20012315270935957, 0.45539135194307606]
-    ],
-    "db41f653-output_0103.jpg": [
-        [0, 0.19396551724137928, 0.09578544061302682, 0.13669950738916253, 0.19157088122605365],
-        [1, 0.44550469505263435, 0.3103446872292423, 0.1176112995499032, 0.3689110634178144],
-        [0, 0.911022120091635, 0.36070066757982894, 0.10652718838815663, 0.18500286772670782]
-    ],
-    "dc469e1a-frame_0895.jpg": [
-        [2, 0.40578817733990147, 0.6392993979200875, 0.2955665024630542, 0.1663929939792009],
-        [1, 0.6009852779576851, 0.48056918304714263, 0.10591121748364413, 0.2933772332488989]
-    ],
-    "cfcbe252-output_0178.jpg": [
-        [2, 0.47444581280788173, 0.7493158182813354, 0.2789408866995074, 0.18938149972632728],
-        [0, 0.5132389162561576, 0.6081007115489874, 0.166871921182266, 0.3295019157088122]
-    ]
-}
+# Base directories
+LABELS_DIR = "/datashare/HW1/labeled_image_data/labels/train"
+IMAGES_DIR = "/datashare/HW1/labeled_image_data/images/train"
 
-# Optional: Map numeric classes to names if you know them.
-# Based on common surgical datasets, this might be:
-CLASS_NAMES = {0: "0", 1: "1", 2: "2"}
+# Map numeric classes to names.
+CLASS_NAMES = {0: "Tool", 1: "Hand 1", 2: "Hand 2"}
 COLORS = {0: (255, 0, 0), 1: (0, 255, 0), 2: (0, 0, 255)}  # Red, Green, Blue in RGB
+
+
+def load_yolo_labels(labels_dir, images_dir):
+    """Automatically parses all YOLO .txt label files in the directory."""
+    data_dict = {}
+    label_files = glob.glob(os.path.join(labels_dir, "*.txt"))
+
+    for label_path in label_files:
+        base_name = os.path.splitext(os.path.basename(label_path))[0]
+
+        # Match the label file to its corresponding image (.jpg or .png)
+        img_filename = f"{base_name}.jpg"
+        if not os.path.exists(os.path.join(images_dir, img_filename)):
+            if os.path.exists(os.path.join(images_dir, f"{base_name}.png")):
+                img_filename = f"{base_name}.png"
+
+        labels = []
+        with open(label_path, 'r') as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) == 5:
+                    class_id = int(parts[0])
+                    x_c = float(parts[1])
+                    y_c = float(parts[2])
+                    w = float(parts[3])
+                    h = float(parts[4])
+                    labels.append([class_id, x_c, y_c, w, h])
+
+        # Only add to dictionary if the file wasn't empty
+        if labels:
+            data_dict[img_filename] = labels
+
+    return data_dict
 
 
 def yolo_to_bbox(x_center, y_center, w, h, img_w, img_h):
@@ -45,16 +57,19 @@ def yolo_to_bbox(x_center, y_center, w, h, img_w, img_h):
     return x_min, y_min, x_max, y_max
 
 
-def visualize_images(data_dict, image_dir="/datashare/HW1/labeled_image_data/images/train"):
-    """Draw bounding boxes on images and plot them."""
-    fig, axes = plt.subplots(1, len(data_dict), figsize=(20, 5))
+def visualize_images(data_dict, image_dir, num_samples=5):
+    """Draw bounding boxes on a random sample of images."""
+    # Randomly sample images so Matplotlib doesn't crash trying to render 100 images
+    sample_keys = random.sample(list(data_dict.keys()), min(num_samples, len(data_dict)))
 
-    for ax, (filename, labels) in zip(axes, data_dict.items()):
+    fig, axes = plt.subplots(1, len(sample_keys), figsize=(20, 5))
+    if len(sample_keys) == 1:
+        axes = [axes]  # Ensure iterable if only 1 image
+
+    for ax, filename in zip(axes, sample_keys):
+        labels = data_dict[filename]
         img_path = os.path.join(image_dir, filename)
 
-        print(img_path)
-        # In a real environment, read the actual image.
-        # Here we create a dummy image if the file isn't found locally.
         if os.path.exists(img_path):
             img = cv2.imread(img_path)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -87,7 +102,6 @@ def visualize_images(data_dict, image_dir="/datashare/HW1/labeled_image_data/ima
 
 def analyze_distributions(data_dict):
     """Analyze and plot class distributions and bounding box sizes."""
-    # Flatten the data into a Pandas DataFrame
     all_labels = []
     for filename, labels in data_dict.items():
         for label in labels:
@@ -100,6 +114,10 @@ def analyze_distributions(data_dict):
                 "height": label[4],
                 "area": label[3] * label[4]  # Normalized area
             })
+
+    if not all_labels:
+        print("No labels found to analyze.")
+        return
 
     df = pd.DataFrame(all_labels)
     df['class_name'] = df['class_id'].map(CLASS_NAMES)
@@ -120,7 +138,7 @@ def analyze_distributions(data_dict):
     axes[1].set_xlabel("Area (Width * Height)")
     axes[1].legend()
 
-    # 3. Spatial Distribution (Where do objects appear on screen?)
+    # 3. Spatial Distribution
     for cls in df['class_id'].unique():
         subset = df[df['class_id'] == cls]
         axes[2].scatter(subset['x_center'], subset['y_center'], alpha=0.7, label=CLASS_NAMES.get(cls))
@@ -128,16 +146,20 @@ def analyze_distributions(data_dict):
     axes[2].set_title("Spatial Distribution of Centers")
     axes[2].set_xlabel("X Center")
     axes[2].set_ylabel("Y Center")
-    axes[2].invert_yaxis()  # Image coordinates start at top-left
+    axes[2].invert_yaxis()
     axes[2].legend()
 
     plt.tight_layout()
     plt.show()
 
 
-# Run the EDA functions
-print("Visualizing Bounding Boxes...")
-visualize_images(sample_data)
+# --- Execution Flow ---
+print("Loading labels from server...")
+full_dataset = load_yolo_labels(LABELS_DIR, IMAGES_DIR)
+print(f"Successfully loaded labels for {len(full_dataset)} images.")
 
-print("Analyzing Data Distribution...")
-analyze_distributions(sample_data)
+print("Visualizing a random sample of 5 images...")
+visualize_images(full_dataset, IMAGES_DIR, num_samples=5)
+
+print("Analyzing data distribution across the full dataset...")
+analyze_distributions(full_dataset)

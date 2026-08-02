@@ -26,3 +26,5 @@ results = model.train(
 metrics = model.val()
 
 print("Training completed successfully!")
+
+model.save('surgical_tools_final.pt')  # Save the final trained model
