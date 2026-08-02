@@ -1,30 +1,43 @@
+import os
 from ultralytics import YOLO
 
-# 1. Load a pre-trained YOLOv8 model
-# 'yolov8n.pt' is the Nano version (lightest and fastest).
-# You can also use 'yolov8s.pt' (Small) or 'yolov8m.pt' (Medium).
-model = YOLO('yolov8n.pt')
 
-# 2. Train the model
-# The train method uses the dataset configuration to start the training process.
-results = model.train(
-    data='dataset.yaml',  # Path to the configuration file
-    epochs=50,  # Number of training epochs
-    imgsz=640,  # Image size (640 is standard for YOLO)
-    batch=16,  # Batch size (decrease if running out of GPU memory)
-    name='surgical_tools',  # Name of the folder where results will be saved
-    device='0',  # Use GPU ('0'). Change to 'cpu' if no GPU is available
-    patience=10,  # Early stopping if validation metrics do not improve for 10 epochs
+def train_base_model():
+    # 1. Initialize with a pre-trained YOLO model (e.g., YOLOv8s)
+    model = YOLO('yolov8s.pt')
 
-    # Data augmentation settings to overcome the limited dataset size:
-    fliplr=0.5,  # Probability of horizontal flip
-    mosaic=1.0  # Mosaic augmentation (combines 4 images into 1 to improve generalization)
-)
+    # 2. Train with boosted augmentations for heavy regularization
+    results = model.train(
+        data='dataset.yaml',
+        epochs=100,
+        imgsz=640,
+        batch=16,
+        patience=20,
 
-# 3. Evaluate the model
-# After training, evaluate the model's performance (mAP) on the validation set.
-metrics = model.val()
+        # --- Augmentation Hyperparameters ---
+        hsv_h=0.015,  # Hue jitter
+        hsv_s=0.7,  # Saturation jitter
+        hsv_v=0.4,  # Brightness jitter
+        degrees=15.0,  # Image rotation (+/- deg)
+        translate=0.1,  # Translation (+/- fraction)
+        scale=0.5,  # Scaling (+/- gain)
+        shear=2.0,  # Shear (+/- deg)
+        fliplr=0.5,  # Horizontal flip (natural for surgical hands/tools)
+        mosaic=1.0,  # Mosaic augmentation (combines 4 images)
+        mixup=0.1,  # Mixup augmentation
 
-print("Training completed successfully!")
+        project='runs/detect',
+        name='base_model',
+        exist_ok=True
+    )
+    
+    metrics = model.val()
 
-model.save('surgical_tools_final.pt')  # Save the final trained model
+    # 3. Save final base model weights to a clean path
+    os.makedirs('weights', exist_ok=True)
+    model.save('weights/base_model.pt')
+    print("\nBase model training complete! Model saved to 'weights/base_model.pt'.")
+
+
+if __name__ == '__main__':
+    train_base_model()
