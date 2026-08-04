@@ -1,10 +1,10 @@
 path: .
 
 train:
-  - datashare/HW1/train/images
-  - home/student/Harel_HW1/dataset/pseudo_id/images
+  - /datashare/HW1/labeled_image_data/images/train
+  - /home/student/Harel_HW1/dataset/pseudo_id/images
 
-val: datashare/HW1/val/images
+val: /datashare/HW1/labeled_image_data/images/val
 
 # Copy your 3 classes exactly as they appear in your original dataset.yaml
 names: ['Empty','Tweezers','Needle_driver']
