@@ -17,10 +17,11 @@ def finetune_model():
     print("Starting fine-tuning process on combined dataset...")
     results = model.train(
         data='dataset_combined.yaml',
-        epochs=50,  # Fewer epochs are usually needed for fine-tuning
-        imgsz=640,
-        batch=16,
-        patience=15,  # Stop early if validation doesn't improve
+        epochs=60,
+        imgsz=1280,
+        rect=True,
+        batch=4,
+        patience=15, # Stop early if validation doesn't improve
 
         # --- Fine-tuning Hyperparameters ---
         lr0=0.001,  # Lower initial learning rate to preserve existing knowledge

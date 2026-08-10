@@ -4,16 +4,16 @@ from ultralytics import YOLO
 
 # Configuration
 VIDEO_PATHS = [
-    "/daatashare/HW1/id_video_data/4_2_24_B_2.mp4",
+    "/datashare/HW1/id_video_data/4_2_24_B_2.mp4",
     "/datashare/HW1/id_video_data/20_2_24_1.mp4"
 ]
 
 OUTPUT_IMG_DIR = "dataset/pseudo_id/images"
 OUTPUT_LBL_DIR = "dataset/pseudo_id/labels"
-MODEL_PATH = "weights/base_model.pt"
+MODEL_PATH = "/home/student/Harel_HW1/runs/detect/runs/detect/base_model_1536_yolo26x_new/weights/best.pt"
 
 # Heuristic Selection Parameters
-CONF_THRESHOLD = 0.65  # Keep predictions with high confidence score
+CONF_THRESHOLD = 0.75  # Keep predictions with high confidence score
 FRAME_STRIDE = 10      # Process 1 frame every 10 frames to avoid duplicate samples
 
 def generate_pseudo_labels():
@@ -44,7 +44,7 @@ def generate_pseudo_labels():
             # Apply temporal sampling (frame stride)
             if frame_count % FRAME_STRIDE == 0:
                 # Perform inference using high confidence filter
-                results = model.predict(frame, conf=CONF_THRESHOLD, verbose=False)[0]
+                results = model.predict(frame, imgsz=1280, conf=0.25, verbose=False)[0]
                 boxes = results.boxes
 
                 # Save frame only if at least one confident object was detected
