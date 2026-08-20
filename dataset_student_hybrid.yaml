@@ -1,0 +1,12 @@
+# dataset_student_hybrid.yaml
+path: .
+# Train: Pseudo-labels (add them here!) + 50 human-labeled anchors
+train:
+  - dataset_v5/pseudo_id/images/
+
+# Val: 50 pristine human-labeled images ONLY
+val:
+  - /datashare/HW1/labeled_image_data/images/train
+  - /datashare/HW1/labeled_image_data/images/val
+
+names: ['Empty','Tweezers','Needle_driver']

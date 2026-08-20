@@ -4,7 +4,7 @@ from ultralytics import YOLO
 
 def train_base_model():
     # Load the Extra Large YOLO26 model
-    model = YOLO('yolo26x.pt')
+    model = YOLO('yolo11s.pt')
 
     results = model.train(
         data='dataset.yaml',
@@ -15,13 +15,13 @@ def train_base_model():
         # --- Memory & Compute Settings ---
         # 24GB VRAM can typically handle batch=4 or batch=8 at 1280px for the 'x' model.
         # If you get a CUDA Out of Memory (OOM) error, drop this to 2 or 4.
-        batch=8,
+        batch=16,
 
         patience=0,
         # freeze=10,
 
         # --- Fix for Needle Drivers (Class Imbalance/Difficulty) ---
-        # cls=2.0,
+        cls=3.0,
         # fl_gamma=1.5,
 
         # --- Augmentations ---
@@ -41,7 +41,7 @@ def train_base_model():
         auto_augment=None,
 
         project='runs/detect',
-        name='base_model_1536_yolo26x_new',
+        name='base_model_1536_yolo11s_newest',
         exist_ok=True
     )
 

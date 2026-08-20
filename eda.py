@@ -7,11 +7,15 @@ import glob
 import random
 
 # Base directories
-LABELS_DIR = "/datashare/HW1/labeled_image_data/labels/train"
-IMAGES_DIR = "/datashare/HW1/labeled_image_data/images/train"
+# IMAGES_DIR = "/datashare/HW1/labeled_image_data/images/train"
+# LABELS_DIR = "/datashare/HW1/labeled_image_data/labels/train"
+
+IMAGES_DIR = "dataset_v5/pseudo_id/images"
+LABELS_DIR = "dataset_v5/pseudo_id/labels"
+
 
 # Map numeric classes to names.
-CLASS_NAMES = {0: "Tool", 1: "Hand 1", 2: "Hand 2"}
+CLASS_NAMES = {0: "Empty", 1: "Tweezers", 2: "Needle_Driver"}
 COLORS = {0: (255, 0, 0), 1: (0, 255, 0), 2: (0, 0, 255)}  # Red, Green, Blue in RGB
 
 
@@ -57,16 +61,17 @@ def yolo_to_bbox(x_center, y_center, w, h, img_w, img_h):
     return x_min, y_min, x_max, y_max
 
 
-def visualize_images(data_dict, image_dir, num_samples=5):
+def visualize_images(data_dict, image_dir, num_samples=3):
     """Draw bounding boxes on a random sample of images."""
     # Randomly sample images so Matplotlib doesn't crash trying to render 100 images
     sample_keys = random.sample(list(data_dict.keys()), min(num_samples, len(data_dict)))
-
-    fig, axes = plt.subplots(1, len(sample_keys), figsize=(20, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(20, 5))
     if len(sample_keys) == 1:
         axes = [axes]  # Ensure iterable if only 1 image
 
-    for ax, filename in zip(axes, sample_keys):
+    idx = 0
+    for ax in axes:
+        filename = sample_keys[idx]
         labels = data_dict[filename]
         img_path = os.path.join(image_dir, filename)
 
@@ -95,6 +100,7 @@ def visualize_images(data_dict, image_dir, num_samples=5):
         ax.imshow(img)
         ax.axis("off")
         ax.set_title(filename, fontsize=8)
+        idx += 1
 
     plt.tight_layout()
     plt.show()
@@ -126,7 +132,7 @@ def analyze_distributions(data_dict):
 
     # 1. Class Distribution
     class_counts = df['class_name'].value_counts()
-    axes[0].bar(class_counts.index, class_counts.values, color=['blue', 'green', 'red'])
+    axes[0].bar(class_counts.index, class_counts.values, color=['blue', 'orange', 'green'])
     axes[0].set_title("Class Frequency Distribution")
     axes[0].set_ylabel("Number of Bounding Boxes")
 
@@ -134,8 +140,8 @@ def analyze_distributions(data_dict):
     for cls in df['class_id'].unique():
         subset = df[df['class_id'] == cls]
         axes[1].hist(subset['area'], alpha=0.5, bins=10, label=CLASS_NAMES.get(cls))
-    axes[1].set_title("Bounding Box Area (Normalized Size)")
-    axes[1].set_xlabel("Area (Width * Height)")
+    axes[1].set_title("Bounding Box Area")
+    axes[1].set_xlabel("Area")
     axes[1].legend()
 
     # 3. Spatial Distribution
@@ -158,8 +164,8 @@ print("Loading labels from server...")
 full_dataset = load_yolo_labels(LABELS_DIR, IMAGES_DIR)
 print(f"Successfully loaded labels for {len(full_dataset)} images.")
 
-print("Visualizing a random sample of 5 images...")
-visualize_images(full_dataset, IMAGES_DIR, num_samples=5)
+print("Visualizing a random sample of images")
+visualize_images(full_dataset, IMAGES_DIR)
 
 print("Analyzing data distribution across the full dataset...")
 analyze_distributions(full_dataset)

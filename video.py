@@ -5,7 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 
 
-def process_video_with_tracking(input_video_path, model_path, output_video_path, output_txt_path, conf_thresh=0.35):
+def process_video_with_tracking(input_video_path, model_path, output_video_path, output_txt_path, conf_thresh=0.5):
     if not os.path.exists(input_video_path):
         raise FileNotFoundError(f"Video not found: {input_video_path}")
     if not os.path.exists(model_path):
@@ -42,7 +42,7 @@ def process_video_with_tracking(input_video_path, model_path, output_video_path,
             frame_idx += 1
 
             # Using model.track with persist=True maintains object IDs across frames (prevents flickering)
-            results = model.track(frame, imgsz=1536, conf=conf_thresh, persist=True, tracker="bytetrack.yaml", verbose=False)[0]
+            results = model.track(frame, imgsz=1536, conf=conf_thresh, persist=True, verbose=False, augment=True, iou=0.25)[0]
             boxes = results.boxes
 
             if boxes is not None and len(boxes) > 0:
@@ -84,8 +84,9 @@ def process_video_with_tracking(input_video_path, model_path, output_video_path,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, default="/datashare/HW1/ood_video_data/4_2_24_A_1.mp4")
-    parser.add_argument("--weights", type=str, default="/home/student/Harel_HW1/runs/detect/runs/detect/student_model_1536_26/weights/best.pt")
-    parser.add_argument("--output_vid", type=str, default="ood_prediction_output.mp4")
+    #parser.add_argument("--input", type=str, default="/datashare/HW1/id_video_data/4_2_24_B_2.mp4")
+    parser.add_argument("--weights", type=str, default="/home/student/Harel_HW1/runs/detect/runs/detect/model_final_final_box_cooldown/weights/best.pt")
+    parser.add_argument("--output_vid", type=str, default="final_aug_ood_prediction_output.mp4")
     parser.add_argument("--output_txt", type=str, default="ood_yolo_labels.txt")
     parser.add_argument("--conf", type=float, default=0.35)
     args = parser.parse_args()
